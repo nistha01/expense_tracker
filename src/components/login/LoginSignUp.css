@@ -11,10 +11,11 @@ body {
     align-items: center;
     height: 100vh;
     background-color: #e9ecef;
+    background-image:url('../../assets/login.jpg')
   }
   
   .form-container {
-    background: #ffffff;
+    background: #87b996;
     padding: 20px 30px;
     border-radius: 8px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);

@@ -1,8 +1,11 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import './LoginSignUp.css';
+import {  AuthContext } from '../auth/AuthContext';
 
 const LoginSignUp = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const {isLogin,setIsLogin}=useContext(AuthContext);
+  
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -70,7 +73,7 @@ const LoginSignUp = () => {
           </button>
         </form>
         <button onClick={toggleForm} className="btn toggle-btn">
-          {isLogin ? 'Switch to Sign Up' : 'Switch to Login'}
+          {isLogin ? 'New User' : 'Already have an account?'}
         </button>
       </div>
     </div>

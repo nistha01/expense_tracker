@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import "./HomePage.css";
+import { AuthContext } from "../auth/AuthContext";
 
 const HomePage = () => {
+  const {setIsLogin}=useContext(AuthContext);
   const [expenses, setExpenses] = useState([
     { id: 1, date: "2024-11-01", description: "Groceries", amount: 50, category: "Food" },
     { id: 2, date: "2024-11-05", description: "Electricity Bill", amount: 100, category: "Utilities" },
@@ -16,7 +18,7 @@ const HomePage = () => {
   const [filterCategory, setFilterCategory] = useState(""); // State to filter expenses
 
   const handleLogout = () => {
-    alert("Logged out!");
+    setIsLogin(false);
   };
 
   const handleFormOpen = () => {

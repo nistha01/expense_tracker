@@ -1,0 +1,155 @@
+body {
+  font-family: 'Arial', sans-serif;
+  background-color: #f9fafb;
+  margin: 0;
+  padding: 0;
+  color: #333;
+}
+
+.profile-page {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.profile-percentage {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.profile-percentage svg {
+  width: 100px;
+  height: 100px;
+  transform: rotate(-90deg);
+}
+
+.profile-percentage circle {
+  fill: none;
+  stroke: #ddd;
+  stroke-width: 8;
+}
+
+.profile-percentage circle:nth-child(2) {
+  stroke: #4caf50;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.3s ease;
+}
+
+.percentage-text {
+  position: absolute;
+  font-size: 20px;
+  font-weight: bold;
+  color: #555;
+}
+
+.profile-content {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+}
+
+.profile-pic-container {
+  flex-shrink: 0;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  overflow: hidden;
+  background-color: #f0f0f0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.profile-pic-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.placeholder-pic {
+  font-size: 36px;
+  color: #bbb;
+  cursor: pointer;
+}
+
+.profile-details {
+  flex-grow: 1;
+}
+
+.profile-details h1 {
+  font-size: 24px;
+  margin-bottom: 10px;
+}
+
+.profile-details p {
+  font-size: 16px;
+  margin: 5px 0;
+}
+
+.profile-details a {
+  color: #007bff;
+  text-decoration: none;
+}
+
+.profile-details a:hover {
+  text-decoration: underline;
+}
+
+.profile-details button {
+  background-color: #007bff;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  margin-top: 15px;
+  font-size: 16px;
+}
+
+.profile-details button:hover {
+  background-color: #0056b3;
+}
+
+.profile-form {
+  margin-top: 20px;
+}
+
+.profile-form h2 {
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+.profile-form label {
+  display: block;
+  margin-bottom: 15px;
+}
+
+.profile-form label input,
+.profile-form label textarea {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  margin-top: 5px;
+  font-size: 14px;
+}
+
+.profile-form button {
+  background-color: #4caf50;
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.profile-form button:hover {
+  background-color: #388e3c;
+}

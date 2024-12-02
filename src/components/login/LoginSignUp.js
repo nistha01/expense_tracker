@@ -3,7 +3,7 @@ import './LoginSignUp.css';
 import { AuthContext } from '../auth/AuthContext';
 
 const LoginSignUp = () => {
-  const { isLogin, setIsLogin, isUser, setUser } = useContext(AuthContext);
+  const { isLogin, setIsLogin, isUser, setUser,gmail,setGmail } = useContext(AuthContext);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -36,6 +36,7 @@ const LoginSignUp = () => {
         return;
       }
       setIsLogin(true);
+      setGmail(email);
       
     } else {
       // Sign-up Process
@@ -47,7 +48,8 @@ const LoginSignUp = () => {
       const signupData = await postCalltoGetToken(urlUp, payload, 'POST');
       if (signupData && signupData.idToken) {
         setIsLogin(true);
-        
+        localStorage.setItem(signupData.email,signupData.idToken);
+        setGmail(email);
         setUser(true); // After sign-up, switch to login mode
       } else {
         alert('Sign-up Failed');

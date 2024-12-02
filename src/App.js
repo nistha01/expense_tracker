@@ -3,6 +3,7 @@ import { AuthContext, AuthProvider } from "./components/auth/AuthContext";
 import HomePage from "./components/home/HomePage";
 import LoginSignUp from "./components/login/LoginSignUp";
 import { useContext } from "react";
+import Profile from "./components/profile/Profile";
 
 const AppRouter = () => {
   const { isLogin } = useContext(AuthContext);
@@ -15,11 +16,13 @@ const AppRouter = () => {
             { path: "", element: <Navigate to="/home" /> },
             { path: "login", element: <Navigate to="/home" /> },
             { path: "home", element: <HomePage /> },
+            {path:"profile",element:<Profile/>}
           ]
         : [
             { path: "", element: <Navigate to="/login" /> },
             { path: "login", element: <LoginSignUp /> },
             { path: "home", element: <LoginSignUp /> },
+           
           ],
     },
   ]);
@@ -30,7 +33,7 @@ const AppRouter = () => {
 function App() {
   return (
     
-      <AppRouter />
+      <AppRouter/>
     
   );
 }

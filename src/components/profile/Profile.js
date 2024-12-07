@@ -1,21 +1,62 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useReducer, useEffect } from "react";
 import "./Profile.css";
-import { AuthContext } from "../auth/AuthContext";
+import { Link } from "react-router-dom";
 
-const Profile = () => {
-  const { gmail } = useContext(AuthContext);
-
-  const [profileData, setProfileData] = useState({
+// Initial state for the reducer
+const initialState = {
+  profileData: {
     name: "",
     email: "",
     phone: "",
     github: "",
     profilePic: "",
     about: "",
-  });
+  },
+  isEditing: false,
+  tempProfileData: {
+    name: "",
+    email: "",
+    phone: "",
+    github: "",
+    profilePic: "",
+    about: "",
+  },
+};
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [tempProfileData, setTempProfileData] = useState({ ...profileData });
+// Reducer function
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "SET_PROFILE_DATA":
+      return {
+        ...state,
+        profileData: action.payload,
+        tempProfileData: action.payload, // Initialize temp profile data
+      };
+    case "SET_TEMP_PROFILE_DATA":
+      return {
+        ...state,
+        tempProfileData: { ...state.tempProfileData, [action.field]: action.value },
+      };
+    case "TOGGLE_EDIT":
+      return {
+        ...state,
+        isEditing: !state.isEditing,
+      };
+    case "SAVE_PROFILE":
+      return {
+        ...state,
+        profileData: { ...state.tempProfileData },
+        isEditing: false,
+      };
+    default:
+      return state;
+  }
+};
+
+const Profile = () => {
+  const [state, dispatch] = useReducer(reducer, initialState);
+  const { profileData, tempProfileData, isEditing } = state;
+  const gmail = localStorage.getItem("gmail"); // Replace with proper email if context is still used
 
   const urlToUpdateUserData = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyAIozOpaSH_7yg2mrsMEjxoQBjx3WUcPDA";
   const urlToGetUserData = "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyAIozOpaSH_7yg2mrsMEjxoQBjx3WUcPDA";
@@ -35,14 +76,12 @@ const Profile = () => {
         }
         const data = await response.json();
         const user = data.users[0]; // Firebase returns user data in an array
-        setProfileData({
+        dispatch({ type: "SET_PROFILE_DATA", payload: {
           name: user.displayName || "",
           email: user.email || "",
-         // phone: "",
-         // github: "",
           profilePic: user.photoUrl || "",
           about: "",
-        });
+        } });
       } catch (error) {
         console.error(error);
       }
@@ -54,15 +93,14 @@ const Profile = () => {
   // Update user data only when "Save" is clicked
   const updateUserData = async () => {
     try {
-      const idToken = "lTeA1vZzUkTEQpF3edTRHfnu1Jo2";
-      console.log(idToken);
+      const idToken = "lTeA1vZzUkTEQpF3edTRHfnu1Jo2"; // Replace with actual token
       const response = await fetch(urlToUpdateUserData, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          "idToken":idToken,
-          "displayName": tempProfileData.name,
-          "photoUrl": tempProfileData.profilePic,
+          idToken,
+          displayName: tempProfileData.name,
+          photoUrl: tempProfileData.profilePic,
           returnSecureToken: true,
         }),
       });
@@ -71,8 +109,7 @@ const Profile = () => {
       }
       const data = await response.json();
       console.log("User data updated:", data);
-      setProfileData({ ...tempProfileData });
-      setIsEditing(false);
+      dispatch({ type: "SAVE_PROFILE" });
     } catch (error) {
       console.error(error);
     }
@@ -80,15 +117,11 @@ const Profile = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setTempProfileData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }));
+    dispatch({ type: "SET_TEMP_PROFILE_DATA", field: name, value: value });
   };
 
   const handleEditClick = () => {
-    setTempProfileData({ ...profileData }); // Load current data into temporary state
-    setIsEditing(true);
+    dispatch({ type: "TOGGLE_EDIT" });
   };
 
   const handleSaveClick = (e) => {
@@ -106,6 +139,9 @@ const Profile = () => {
 
   return (
     <div className="profile-page">
+      <Link to="/home">
+        <button className="home-back">Back Home</button>
+      </Link>
       <div className="profile-percentage">
         <svg>
           <circle cx="50" cy="50" r="45" />

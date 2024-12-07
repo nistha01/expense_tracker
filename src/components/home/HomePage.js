@@ -1,89 +1,125 @@
-import React, { useContext, useState } from "react";
+import React, { useReducer } from "react";
 import "./HomePage.css";
-import { AuthContext } from "../auth/AuthContext";
 import { Link } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import { setLogin, setFormisOpen } from "../auth/authSlice";
 
-const HomePage = () => {
-  const { setIsLogin } = useContext(AuthContext);
-  const [expenses, setExpenses] = useState([
+// Initial state for the reducer
+const initialState = {
+  expenses: [
     { id: 1, date: "2024-11-01", description: "Groceries", amount: 50, category: "Food" },
     { id: 2, date: "2024-11-05", description: "Electricity Bill", amount: 100, category: "Utilities" },
-  ]);
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
-  const [editingExpense, setEditingExpense] = useState(null);
-  const [newExpense, setNewExpense] = useState({
-    date: "",
-    description: "",
-    amount: "",
-    category: "",
-  });
-  const [filterCategory, setFilterCategory] = useState("");
+  ],
+  isEditFormOpen: false,
+  editingExpense: null,
+  newExpense: { date: "", description: "", amount: "", category: "" },
+  filterCategory: "",
+};
+
+// Reducer function
+const reducer = (state, action) => {
+  switch (action.type) {
+    case "SET_NEW_EXPENSE":
+      return {
+        ...state,
+        newExpense: { ...state.newExpense, [action.payload.name]: action.payload.value },
+      };
+    case "ADD_EXPENSE":
+      return {
+        ...state,
+        expenses: [...state.expenses, action.payload],
+        newExpense: { date: "", description: "", amount: "", category: "" },
+      };
+    case "SET_EDITING_EXPENSE":
+      return {
+        ...state,
+        isEditFormOpen: true,
+        editingExpense: action.payload,
+        newExpense: { ...action.payload },
+      };
+    case "UPDATE_EXPENSE":
+      return {
+        ...state,
+        expenses: state.expenses.map((expense) =>
+          expense.id === state.editingExpense.id
+            ? { ...action.payload }
+            : expense
+        ),
+        isEditFormOpen: false,
+        editingExpense: null,
+        newExpense: { date: "", description: "", amount: "", category: "" },
+      };
+      case "CLOSE_EDITING_FORM":
+      return {
+        ...state,
+        isEditFormOpen: false,
+        editingExpense: null,
+        newExpense: { date: "", description: "", amount: "", category: "" },
+      };
+    case "DELETE_EXPENSE":
+      return {
+        ...state,
+        expenses: state.expenses.filter((expense) => expense.id !== action.payload),
+      };
+    case "SET_FILTER_CATEGORY":
+      return { ...state, filterCategory: action.payload };
+    default:
+      return state;
+  }
+};
+
+const HomePage = () => {
+  const [state, dispatchLocal] = useReducer(reducer, initialState);
+  const globalDispatch = useDispatch();
+  const isFormOpen = useSelector((state) => state.auth.isFormOpen);
 
   const handleLogout = () => {
-    setIsLogin(false);
-  };
-
-  const handleFormOpen = () => {
-    setIsFormOpen(true);
-  };
-
-  const handleFormClose = () => {
-    setIsFormOpen(false);
-    setNewExpense({ date: "", description: "", amount: "", category: "" });
+    globalDispatch(setLogin(false));
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewExpense((prev) => ({ ...prev, [name]: value }));
+    dispatchLocal({ type: "SET_NEW_EXPENSE", payload: { name, value } });
   };
 
   const handleFormSubmit = (e) => {
     e.preventDefault();
-    const expenseToAdd = {
-      ...newExpense,
-      id: expenses.length + 1,
-      amount: parseFloat(newExpense.amount),
+    const newExpense = {
+      ...state.newExpense,
+      id: state.expenses.length + 1,
+      amount: parseFloat(state.newExpense.amount),
     };
-    setExpenses((prev) => [...prev, expenseToAdd]);
-    handleFormClose();
+    dispatchLocal({ type: "ADD_EXPENSE", payload: newExpense });
+    globalDispatch(setFormisOpen(false));
   };
-
-  const handleEditClick = (expense) => {
-    setEditingExpense(expense);
-    setNewExpense(expense);
-    setIsEditFormOpen(true);
-  };
-
-  const handleEditFormClose = () => {
-    setIsEditFormOpen(false);
-    setEditingExpense(null);
-    setNewExpense({ date: "", description: "", amount: "", category: "" });
-  };
+  const handleFormClose=()=>{
+    globalDispatch(setFormisOpen(false));
+  }
 
   const handleEditFormSubmit = (e) => {
     e.preventDefault();
-    setExpenses((prev) =>
-      prev.map((expense) =>
-        expense.id === editingExpense.id
-          ? { ...editingExpense, ...newExpense, amount: parseFloat(newExpense.amount) }
-          : expense
-      )
-    );
-    handleEditFormClose();
+    const updatedExpense = {
+      ...state.newExpense,
+      amount: parseFloat(state.newExpense.amount),
+    };
+    dispatchLocal({ type: "UPDATE_EXPENSE", payload: updatedExpense });
   };
+  const handleEditFormClose=()=>{
+    
+  }
+  
 
   const handleDeleteClick = (id) => {
-    setExpenses((prev) => prev.filter((expense) => expense.id !== id));
+    dispatchLocal({ type: "DELETE_EXPENSE", payload: id });
   };
 
   const handleCategoryFilter = (e) => {
-    setFilterCategory(e.target.value);
+    dispatchLocal({ type: "SET_FILTER_CATEGORY", payload: e.target.value });
   };
 
-  const filteredExpenses = filterCategory
-    ? expenses.filter((expense) => expense.category === filterCategory)
-    : expenses;
+  const filteredExpenses = state.filterCategory
+    ? state.expenses.filter((expense) => expense.category === state.filterCategory)
+    : state.expenses;
 
   return (
     <div className="homepage">
@@ -99,13 +135,13 @@ const HomePage = () => {
         </div>
       </header>
       <main className="homepage-content">
-        <button className="add-expense-btn" onClick={handleFormOpen}>
+        <button className="add-expense-btn" onClick={() => globalDispatch(setFormisOpen(true))}>
           Add Expense
         </button>
 
         <div className="filter-container">
           <label htmlFor="category-filter">Filter by Category:</label>
-          <select id="category-filter" value={filterCategory} onChange={handleCategoryFilter}>
+          <select id="category-filter" value={state.filterCategory} onChange={handleCategoryFilter}>
             <option value="">All</option>
             <option value="Food">Food</option>
             <option value="Utilities">Utilities</option>
@@ -133,7 +169,7 @@ const HomePage = () => {
                   <td>${expense.amount.toFixed(2)}</td>
                   <td>{expense.category}</td>
                   <td>
-                    <button className="edit-btn" onClick={() => handleEditClick(expense)}>
+                    <button className="edit-btn" onClick={() => dispatchLocal({ type: "SET_EDITING_EXPENSE", payload: expense })}>
                       Edit
                     </button>
                     <button className="delete-btn" onClick={() => handleDeleteClick(expense.id)}>
@@ -158,19 +194,19 @@ const HomePage = () => {
               <form onSubmit={handleFormSubmit}>
                 <label>
                   Date:
-                  <input type="date" name="date" value={newExpense.date} onChange={handleInputChange} required />
+                  <input type="date" name="date" value={state.newExpense.date} onChange={handleInputChange} required />
                 </label>
                 <label>
                   Description:
-                  <input type="text" name="description" value={newExpense.description} onChange={handleInputChange} required />
+                  <input type="text" name="description" value={state.newExpense.description} onChange={handleInputChange} required />
                 </label>
                 <label>
                   Amount:
-                  <input type="number" name="amount" value={newExpense.amount} onChange={handleInputChange} required />
+                  <input type="number" name="amount" value={state.newExpense.amount} onChange={handleInputChange} required />
                 </label>
                 <label>
                   Category:
-                  <select name="category" value={newExpense.category} onChange={handleInputChange} required>
+                  <select name="category" value={state.newExpense.category} onChange={handleInputChange} required>
                     <option value="">-- Select a Category --</option>
                     <option value="Food">Food</option>
                     <option value="Utilities">Utilities</option>
@@ -180,7 +216,7 @@ const HomePage = () => {
                 </label>
                 <div className="form-buttons">
                   <button type="submit">Add Expense</button>
-                  <button type="button" onClick={handleFormClose}>
+                  <button type="button" onClick={() => globalDispatch(setFormisOpen(false))}>
                     Cancel
                   </button>
                 </div>
@@ -189,7 +225,7 @@ const HomePage = () => {
           </div>
         )}
 
-        {isEditFormOpen && (
+        {state.isEditFormOpen && (
           <div className="popup-overlay">
             <div className="popup-form">
               <h2>Edit Expense</h2>
@@ -199,19 +235,19 @@ const HomePage = () => {
               <form onSubmit={handleEditFormSubmit}>
                 <label>
                   Date:
-                  <input type="date" name="date" value={newExpense.date} onChange={handleInputChange} required />
+                  <input type="date" name="date" value={state.newExpense.date} onChange={handleInputChange} required />
                 </label>
                 <label>
                   Description:
-                  <input type="text" name="description" value={newExpense.description} onChange={handleInputChange} required />
+                  <input type="text" name="description" value={state.newExpense.description} onChange={handleInputChange} required />
                 </label>
                 <label>
                   Amount:
-                  <input type="number" name="amount" value={newExpense.amount} onChange={handleInputChange} required />
+                  <input type="number" name="amount" value={state.newExpense.amount} onChange={handleInputChange} required />
                 </label>
                 <label>
                   Category:
-                  <select name="category" value={newExpense.category} onChange={handleInputChange} required>
+                  <select name="category" value={state.newExpense.category} onChange={handleInputChange} required>
                     <option value="">-- Select a Category --</option>
                     <option value="Food">Food</option>
                     <option value="Utilities">Utilities</option>
@@ -220,8 +256,8 @@ const HomePage = () => {
                   </select>
                 </label>
                 <div className="form-buttons">
-                  <button type="submit">Save Changes</button>
-                  <button type="button" onClick={handleEditFormClose}>
+                  <button type="submit">Update Expense</button>
+                  <button type="button" onClick={() => dispatchLocal({ type: "SET_EDITING_EXPENSE", payload: null })}>
                     Cancel
                   </button>
                 </div>

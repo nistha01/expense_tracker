@@ -1,69 +1,76 @@
 body {
-  font-family: 'Arial', sans-serif;
-  background-color: #f9fafb;
   margin: 0;
-  padding: 0;
+  font-family: "Arial", sans-serif;
+  background-color: #f9f9f9;
   color: #333;
 }
 
 .profile-page {
-  max-width: 900px;
-  margin: 20px auto;
+  position: relative;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 20px;
-  background: #ffffff;
-  border-radius: 10px;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 }
 
 .profile-percentage {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 30px;
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 100px;
+  height: 100px;
 }
 
 .profile-percentage svg {
+  transform: rotate(-90deg);
   width: 100px;
   height: 100px;
-  transform: rotate(-90deg);
 }
 
 .profile-percentage circle {
   fill: none;
-  stroke: #ddd;
   stroke-width: 8;
 }
 
-.profile-percentage circle:nth-child(2) {
-  stroke: #4caf50;
+.profile-percentage circle:first-child {
+  stroke: #e6e6e6;
+}
+
+.profile-percentage circle:last-child {
+  stroke: #007bff;
   stroke-linecap: round;
   transition: stroke-dashoffset 0.3s ease;
 }
 
 .percentage-text {
   position: absolute;
-  font-size: 20px;
-  font-weight: bold;
-  color: #555;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
 }
 
 .profile-content {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
   align-items: center;
+  text-align: center;
+  max-width: 400px;
 }
 
 .profile-pic-container {
-  flex-shrink: 0;
-  width: 120px;
-  height: 120px;
+  width: 100px;
+  height: 100px;
   border-radius: 50%;
   overflow: hidden;
-  background-color: #f0f0f0;
+  background-color: #ddd;
   display: flex;
   justify-content: center;
   align-items: center;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  font-size: 24px;
+  color: #555;
+  margin-bottom: 20px;
 }
 
 .profile-pic-container img {
@@ -73,13 +80,7 @@ body {
 }
 
 .placeholder-pic {
-  font-size: 36px;
-  color: #bbb;
   cursor: pointer;
-}
-
-.profile-details {
-  flex-grow: 1;
 }
 
 .profile-details h1 {
@@ -88,7 +89,6 @@ body {
 }
 
 .profile-details p {
-  font-size: 16px;
   margin: 5px 0;
 }
 
@@ -102,14 +102,13 @@ body {
 }
 
 .profile-details button {
+  margin-top: 20px;
+  padding: 10px 20px;
   background-color: #007bff;
-  color: white;
-  padding: 10px 15px;
+  color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  margin-top: 15px;
-  font-size: 16px;
 }
 
 .profile-details button:hover {
@@ -117,39 +116,50 @@ body {
 }
 
 .profile-form {
-  margin-top: 20px;
-}
-
-.profile-form h2 {
-  font-size: 22px;
-  margin-bottom: 20px;
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  max-width: 400px;
 }
 
 .profile-form label {
   display: block;
-  margin-bottom: 15px;
+  margin: 10px 0;
 }
 
-.profile-form label input,
-.profile-form label textarea {
+.profile-form input,
+.profile-form textarea {
   width: 100%;
   padding: 8px;
-  border: 1px solid #ddd;
-  border-radius: 5px;
   margin-top: 5px;
-  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
 }
 
 .profile-form button {
-  background-color: #4caf50;
-  color: white;
-  padding: 10px 15px;
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  background-color: #007bff;
+  color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 4px;
   cursor: pointer;
-  font-size: 16px;
 }
 
 .profile-form button:hover {
-  background-color: #388e3c;
+  background-color: #0056b3;
+}
+
+.home-back {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  width: 60px;
+  height: 40px;
 }

@@ -1,19 +1,16 @@
-import React, { useContext, useState } from 'react';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { setLogin, setGmail } from '../auth/authSlice'; // Make sure you have proper imports
 import './LoginSignUp.css';
-import { AuthContext } from '../auth/AuthContext';
 
 const LoginSignUp = () => {
-  const { isLogin, setIsLogin, isUser, setUser,gmail,setGmail } = useContext(AuthContext);
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
-  const toggleForm = () => {
-    setUser(!isUser); // Toggle between Login and Sign-up forms
-    setEmail('');
-    setPassword('');
-    setConfirmPassword('');
-  };
+  const [state, setState] = useState({
+    email: '',
+    password: '',
+    confirmPassword: '',
+    isUser: true, // true for login, false for sign-up
+  });
+  const dispatch = useDispatch();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -22,42 +19,42 @@ const LoginSignUp = () => {
     const urlIn = 'https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=AIzaSyAIozOpaSH_7yg2mrsMEjxoQBjx3WUcPDA';
 
     const payload = {
-      email: email,
-      password: password,
+      email: state.email,
+      password: state.password,
       returnSecureToken: true,
     };
 
-    if (isUser) {
-      // Login Process
+    if (state.isUser) {
       const loginData = await postCalltoGetToken(urlIn, payload, 'POST');
       if (!loginData || !loginData.idToken) {
-        setIsLogin(false);
+        dispatch(setLogin(false)); 
         alert('Login Failed');
         return;
       }
-      setIsLogin(true);
-      setGmail(email);
-      
+      dispatch(setLogin(true)); 
+      dispatch(setGmail(state.email)); 
+      localStorage.setItem('authToken', loginData.idToken);
+      localStorage.setItem('email', state.email); 
     } else {
       // Sign-up Process
-      if (password !== confirmPassword) {
+      if (state.password !== state.confirmPassword) {
         alert('Passwords do not match');
         return;
       }
 
       const signupData = await postCalltoGetToken(urlUp, payload, 'POST');
       if (signupData && signupData.idToken) {
-        setIsLogin(true);
-        localStorage.setItem(signupData.email,signupData.idToken);
-        setGmail(email);
-        setUser(true); // After sign-up, switch to login mode
+        dispatch(setLogin(true)); // Set login state to true
+        localStorage.setItem('authToken', signupData.idToken);
+        localStorage.setItem('email', state.email);
+        dispatch(setGmail(state.email)); // Store email in global state
       } else {
         alert('Sign-up Failed');
       }
     }
   };
 
-  async function postCalltoGetToken(url, payload, method) {
+  const postCalltoGetToken = async (url, payload, method) => {
     try {
       const response = await fetch(url, {
         method: method,
@@ -78,19 +75,19 @@ const LoginSignUp = () => {
       alert(error.message);
       return null;
     }
-  }
+  };
 
   return (
     <div className="container">
       <div className="form-container">
-        <h2>{isUser ? 'Login' : 'Sign Up'}</h2>
+        <h2>{state.isUser ? 'Login' : 'Sign Up'}</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label>Email:</label>
             <input
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              value={state.email}
+              onChange={(e) => setState({ ...state, email: e.target.value })}
               required
             />
           </div>
@@ -98,29 +95,26 @@ const LoginSignUp = () => {
             <label>Password:</label>
             <input
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={state.password}
+              onChange={(e) => setState({ ...state, password: e.target.value })}
               required
             />
           </div>
-          {!isUser && (
+          {!state.isUser && (
             <div className="form-group">
               <label>Confirm Password:</label>
               <input
                 type="password"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
+                value={state.confirmPassword}
+                onChange={(e) => setState({ ...state, confirmPassword: e.target.value })}
                 required
               />
             </div>
           )}
           <button type="submit" className="btn submit-btn">
-            {isUser ? 'Login' : 'Sign Up'}
+            {state.isUser ? 'Login' : 'Sign Up'}
           </button>
         </form>
-        <button onClick={toggleForm} className="btn toggle-btn">
-          {isUser ? 'New User' : 'Already have an account?'}
-        </button>
       </div>
     </div>
   );

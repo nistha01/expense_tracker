@@ -6,7 +6,7 @@
     min-height: 100vh;
     overflow-y: auto;
     background-color: antiquewhite;
-    background-image: url('./../../assets/Home.jpeg');
+    background-image: url('./../../assets/homee.png');
     
   }
   
@@ -57,9 +57,9 @@
   }
   
   .expense-table {
-    width: 100%;
+    width: 85%;
     border-collapse: collapse;
-    margin: 20px 0;
+    margin: 10px 100px;
   }
   
   .expense-table th,

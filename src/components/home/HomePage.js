@@ -166,7 +166,7 @@ const HomePage = () => {
                 <tr key={expense.id}>
                   <td>{expense.date}</td>
                   <td>{expense.description}</td>
-                  <td>${expense.amount.toFixed(2)}</td>
+                  <td>₹{expense.amount.toFixed(2)}</td>
                   <td>{expense.category}</td>
                   <td>
                     <button className="edit-btn" onClick={() => dispatchLocal({ type: "SET_EDITING_EXPENSE", payload: expense })}>

@@ -1,22 +1,19 @@
-import React, { useReducer } from "react";
+import React, { useReducer, useEffect } from "react";
 import "./HomePage.css";
 import { Link } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
-import { setLogin, setFormisOpen } from "../auth/authSlice";
+import { setLogin, setFormisOpen, gmail } from "../auth/authSlice";
+import { ref, push, get,remove } from "firebase/database";
+import { database } from "../auth/FireBaseConfig";
 
-// Initial state for the reducer
+
 const initialState = {
-  expenses: [
-    { id: 1, date: "2024-11-01", description: "Groceries", amount: 50, category: "Food" },
-    { id: 2, date: "2024-11-05", description: "Electricity Bill", amount: 100, category: "Utilities" },
-  ],
+  expenses: [],
   isEditFormOpen: false,
   editingExpense: null,
   newExpense: { date: "", description: "", amount: "", category: "" },
   filterCategory: "",
 };
-
-// Reducer function
 const reducer = (state, action) => {
   switch (action.type) {
     case "SET_NEW_EXPENSE":
@@ -24,12 +21,12 @@ const reducer = (state, action) => {
         ...state,
         newExpense: { ...state.newExpense, [action.payload.name]: action.payload.value },
       };
-    case "ADD_EXPENSE":
-      return {
-        ...state,
-        expenses: [...state.expenses, action.payload],
-        newExpense: { date: "", description: "", amount: "", category: "" },
-      };
+    // case "ADD_EXPENSE":
+    //   return {
+    //     ...state,
+    //     expenses: [...state.expenses, action.payload],
+    //     newExpense: { date: "", description: "", amount: "", category: "" },
+    //   };
     case "SET_EDITING_EXPENSE":
       return {
         ...state,
@@ -41,15 +38,13 @@ const reducer = (state, action) => {
       return {
         ...state,
         expenses: state.expenses.map((expense) =>
-          expense.id === state.editingExpense.id
-            ? { ...action.payload }
-            : expense
+          expense.id === state.editingExpense.id ? { ...action.payload } : expense
         ),
         isEditFormOpen: false,
         editingExpense: null,
         newExpense: { date: "", description: "", amount: "", category: "" },
       };
-      case "CLOSE_EDITING_FORM":
+    case "CLOSE_EDITING_FORM":
       return {
         ...state,
         isEditFormOpen: false,
@@ -63,6 +58,8 @@ const reducer = (state, action) => {
       };
     case "SET_FILTER_CATEGORY":
       return { ...state, filterCategory: action.payload };
+    case "SET_EXPENSES":
+      return { ...state, expenses: action.payload };
     default:
       return state;
   }
@@ -72,8 +69,13 @@ const HomePage = () => {
   const [state, dispatchLocal] = useReducer(reducer, initialState);
   const globalDispatch = useDispatch();
   const isFormOpen = useSelector((state) => state.auth.isFormOpen);
+  const email = useSelector((state) => state.auth.gmail); 
+  useEffect(() => {
+    fetchExpenses();
+  }, [email]);
 
   const handleLogout = () => {
+    localStorage.clear();
     globalDispatch(setLogin(false));
   };
 
@@ -82,20 +84,43 @@ const HomePage = () => {
     dispatchLocal({ type: "SET_NEW_EXPENSE", payload: { name, value } });
   };
 
-  const handleFormSubmit = (e) => {
+  const handleFormSubmit = async (e) => {
     e.preventDefault();
     const newExpense = {
       ...state.newExpense,
-      id: state.expenses.length + 1,
       amount: parseFloat(state.newExpense.amount),
     };
-    dispatchLocal({ type: "ADD_EXPENSE", payload: newExpense });
+    try {
+      const formattedEmail = email.replace(/\./g, "_");
+      const expensesRef = ref(database, `expenses/${formattedEmail}`);
+      await push(expensesRef, newExpense);
+      alert("Expense added successfully!");
+      fetchExpenses();
+      dispatchLocal({
+        type: "SET_NEW_EXPENSE",
+        payload: { date: "", description: "", amount: "", category: "" },
+      });
+      globalDispatch(setFormisOpen(false));
+    } catch (error) {
+      alert("Error adding expense:", error);
+    }
+  };
+
+  const handleDeleteClickk = (id) => {
+    const formattedEmail = email.replace(/\./g, "_");
+    const expenseRef = ref(database, `expenses/${formattedEmail}/${id}`);
+    remove(expenseRef)
+      .then(() => {
+        console.log("Expense deleted successfully!");
+        dispatchLocal({ type: "DELETE_EXPENSE", payload: id });
+      })
+      .catch((error) => {
+        console.error("Error deleting expense:", error);
+      });
+  };
+  const handleFormClose = () => {
     globalDispatch(setFormisOpen(false));
   };
-  const handleFormClose=()=>{
-    globalDispatch(setFormisOpen(false));
-  }
-
   const handleEditFormSubmit = (e) => {
     e.preventDefault();
     const updatedExpense = {
@@ -104,10 +129,6 @@ const HomePage = () => {
     };
     dispatchLocal({ type: "UPDATE_EXPENSE", payload: updatedExpense });
   };
-  const handleEditFormClose=()=>{
-    
-  }
-  
 
   const handleDeleteClick = (id) => {
     dispatchLocal({ type: "DELETE_EXPENSE", payload: id });
@@ -120,6 +141,28 @@ const HomePage = () => {
   const filteredExpenses = state.filterCategory
     ? state.expenses.filter((expense) => expense.category === state.filterCategory)
     : state.expenses;
+
+  const fetchExpenses = async () => {
+    try {
+      const formattedEmail = email.replace(/\./g, "_");
+      const expensesRef = ref(database, `expenses/${formattedEmail}`);
+      const snapshot = await get(expensesRef);
+
+      if (snapshot.exists()) {
+        const expenses = snapshot.val();
+        const formattedExpenses = Object.keys(expenses).map((key) => ({
+          id: key, 
+          ...expenses[key],
+        }));
+
+        dispatchLocal({ type: "SET_EXPENSES", payload: formattedExpenses });
+      } else {
+        dispatchLocal({ type: "SET_EXPENSES", payload: [] });
+      }
+    } catch (error) {
+      console.error("Error fetching expenses:", error);
+    }
+  };
 
   return (
     <div className="homepage">
@@ -172,7 +215,7 @@ const HomePage = () => {
                     <button className="edit-btn" onClick={() => dispatchLocal({ type: "SET_EDITING_EXPENSE", payload: expense })}>
                       Edit
                     </button>
-                    <button className="delete-btn" onClick={() => handleDeleteClick(expense.id)}>
+                    <button className="delete-btn" onClick={() => handleDeleteClickk(expense.id)}>
                       Delete
                     </button>
                   </td>
@@ -217,47 +260,6 @@ const HomePage = () => {
                 <div className="form-buttons">
                   <button type="submit">Add Expense</button>
                   <button type="button" onClick={() => globalDispatch(setFormisOpen(false))}>
-                    Cancel
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
-        )}
-
-        {state.isEditFormOpen && (
-          <div className="popup-overlay">
-            <div className="popup-form">
-              <h2>Edit Expense</h2>
-              <button className="circular-btn" onClick={handleEditFormClose}>
-                x
-              </button>
-              <form onSubmit={handleEditFormSubmit}>
-                <label>
-                  Date:
-                  <input type="date" name="date" value={state.newExpense.date} onChange={handleInputChange} required />
-                </label>
-                <label>
-                  Description:
-                  <input type="text" name="description" value={state.newExpense.description} onChange={handleInputChange} required />
-                </label>
-                <label>
-                  Amount:
-                  <input type="number" name="amount" value={state.newExpense.amount} onChange={handleInputChange} required />
-                </label>
-                <label>
-                  Category:
-                  <select name="category" value={state.newExpense.category} onChange={handleInputChange} required>
-                    <option value="">-- Select a Category --</option>
-                    <option value="Food">Food</option>
-                    <option value="Utilities">Utilities</option>
-                    <option value="Transportation">Transportation</option>
-                    <option value="Health">Health</option>
-                  </select>
-                </label>
-                <div className="form-buttons">
-                  <button type="submit">Update Expense</button>
-                  <button type="button" onClick={() => dispatchLocal({ type: "SET_EDITING_EXPENSE", payload: null })}>
                     Cancel
                   </button>
                 </div>

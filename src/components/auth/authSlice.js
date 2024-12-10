@@ -28,5 +28,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { setLogin, setUser, setGmail,isLogin,setExpenseLi,setFormisOpen } = authSlice.actions;
+export const { setLogin, setUser, setGmail,isLogin,setExpenseLi,setFormisOpen,gmail } = authSlice.actions;
 export default authSlice.reducer;

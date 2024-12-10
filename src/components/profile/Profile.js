@@ -2,7 +2,7 @@ import React, { useReducer, useEffect } from "react";
 import "./Profile.css";
 import { Link } from "react-router-dom";
 
-// Initial state for the reducer
+
 const initialState = {
   profileData: {
     name: "",
@@ -56,63 +56,14 @@ const reducer = (state, action) => {
 const Profile = () => {
   const [state, dispatch] = useReducer(reducer, initialState);
   const { profileData, tempProfileData, isEditing } = state;
-  const gmail = localStorage.getItem("gmail"); // Replace with proper email if context is still used
-
-  const urlToUpdateUserData = "https://identitytoolkit.googleapis.com/v1/accounts:update?key=AIzaSyAIozOpaSH_7yg2mrsMEjxoQBjx3WUcPDA";
-  const urlToGetUserData = "https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=AIzaSyAIozOpaSH_7yg2mrsMEjxoQBjx3WUcPDA";
-
+  
+ 
   // Fetch user data on component mount
-  useEffect(() => {
-    async function fetchUserData() {
-      try {
-        const idToken = localStorage.getItem(gmail);
-        const response = await fetch(urlToGetUserData, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ idToken }),
-        });
-        if (!response.ok) {
-          throw new Error("Failed to fetch user data");
-        }
-        const data = await response.json();
-        const user = data.users[0]; // Firebase returns user data in an array
-        dispatch({ type: "SET_PROFILE_DATA", payload: {
-          name: user.displayName || "",
-          email: user.email || "",
-          profilePic: user.photoUrl || "",
-          about: "",
-        } });
-      } catch (error) {
-        console.error(error);
-      }
-    }
-
-    fetchUserData();
-  }, [gmail]);
+  
 
   // Update user data only when "Save" is clicked
   const updateUserData = async () => {
-    try {
-      const idToken = "lTeA1vZzUkTEQpF3edTRHfnu1Jo2"; // Replace with actual token
-      const response = await fetch(urlToUpdateUserData, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idToken,
-          displayName: tempProfileData.name,
-          photoUrl: tempProfileData.profilePic,
-          returnSecureToken: true,
-        }),
-      });
-      if (!response.ok) {
-        throw new Error("Failed to update user data");
-      }
-      const data = await response.json();
-      console.log("User data updated:", data);
-      dispatch({ type: "SAVE_PROFILE" });
-    } catch (error) {
-      console.error(error);
-    }
+  
   };
 
   const handleChange = (e) => {

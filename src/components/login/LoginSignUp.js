@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useDispatch } from 'react-redux';
-import { setLogin, setGmail } from '../auth/authSlice'; // Make sure you have proper imports
+import { setLogin, setGmail } from '../auth/authSlice'; 
 import './LoginSignUp.css';
 
 const LoginSignUp = () => {
@@ -8,7 +8,7 @@ const LoginSignUp = () => {
     email: '',
     password: '',
     confirmPassword: '',
-    isUser: true, // true for login, false for sign-up
+    isUser: true, 
   });
   const dispatch = useDispatch();
 
@@ -23,7 +23,6 @@ const LoginSignUp = () => {
       password: state.password,
       returnSecureToken: true,
     };
-
     if (state.isUser) {
       const loginData = await postCalltoGetToken(urlIn, payload, 'POST');
       if (!loginData || !loginData.idToken) {
@@ -36,7 +35,6 @@ const LoginSignUp = () => {
       localStorage.setItem('authToken', loginData.idToken);
       localStorage.setItem('email', state.email); 
     } else {
-      // Sign-up Process
       if (state.password !== state.confirmPassword) {
         alert('Passwords do not match');
         return;
@@ -44,10 +42,10 @@ const LoginSignUp = () => {
 
       const signupData = await postCalltoGetToken(urlUp, payload, 'POST');
       if (signupData && signupData.idToken) {
-        dispatch(setLogin(true)); // Set login state to true
+        dispatch(setLogin(true)); 
         localStorage.setItem('authToken', signupData.idToken);
         localStorage.setItem('email', state.email);
-        dispatch(setGmail(state.email)); // Store email in global state
+        dispatch(setGmail(state.email)); 
       } else {
         alert('Sign-up Failed');
       }

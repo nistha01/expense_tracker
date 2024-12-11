@@ -1,91 +1,112 @@
-import React, { useReducer, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./Profile.css";
 import { Link } from "react-router-dom";
-
-
-const initialState = {
-  profileData: {
-    name: "",
-    email: "",
-    phone: "",
-    github: "",
-    profilePic: "",
-    about: "",
-  },
-  isEditing: false,
-  tempProfileData: {
-    name: "",
-    email: "",
-    phone: "",
-    github: "",
-    profilePic: "",
-    about: "",
-  },
-};
-
-// Reducer function
-const reducer = (state, action) => {
-  switch (action.type) {
-    case "SET_PROFILE_DATA":
-      return {
-        ...state,
-        profileData: action.payload,
-        tempProfileData: action.payload, // Initialize temp profile data
-      };
-    case "SET_TEMP_PROFILE_DATA":
-      return {
-        ...state,
-        tempProfileData: { ...state.tempProfileData, [action.field]: action.value },
-      };
-    case "TOGGLE_EDIT":
-      return {
-        ...state,
-        isEditing: !state.isEditing,
-      };
-    case "SAVE_PROFILE":
-      return {
-        ...state,
-        profileData: { ...state.tempProfileData },
-        isEditing: false,
-      };
-    default:
-      return state;
-  }
-};
+import { ref, set, get } from "firebase/database";
+import { database } from "../auth/FireBaseConfig";
+import { useSelector } from "react-redux";
 
 const Profile = () => {
-  const [state, dispatch] = useReducer(reducer, initialState);
-  const { profileData, tempProfileData, isEditing } = state;
-  
- 
-  // Fetch user data on component mount
-  
+  const emaill = useSelector((state) => state.auth.gmail);
+  const [profileData, setProfileData] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    github: "",
+    profilePic: "",
+    about: "",
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [tempProfileData, setTempProfileData] = useState({ ...profileData });
+  const formattedEmail = emaill.replace(/\./g, "_");
+  const [file, setFile] = useState(null);
 
-  // Update user data only when "Save" is clicked
-  const updateUserData = async () => {
-  
+
+  const handleFileChange = (e) => {
+    const selectedFile = e.target.files[0]; 
+    if (selectedFile && selectedFile.type.startsWith("image/")) {
+      setFile(selectedFile);
+    } else {
+      alert("Please upload a valid image file.");
+    }
   };
+
+  
+  const convertToBase64 = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        resolve(reader.result); // Returns the Base64 string
+      };
+      reader.onerror = reject; 
+      reader.readAsDataURL(file); 
+    });
+  };
+
+  // Fetch profile data from Firebase
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      const profileRef = ref(database, `profileDetails/${formattedEmail}`);
+      try {
+        const snapshot = await get(profileRef);
+        if (snapshot.exists()) {
+          setProfileData(snapshot.val());
+        }
+      } catch (error) {
+        console.error("Error fetching profile data:", error);
+      }
+    };
+    fetchProfileData();
+  }, [formattedEmail]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    dispatch({ type: "SET_TEMP_PROFILE_DATA", field: name, value: value });
+    setTempProfileData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
   };
 
   const handleEditClick = () => {
-    dispatch({ type: "TOGGLE_EDIT" });
+    setIsEditing(true);
+    setTempProfileData({ ...profileData });
   };
 
-  const handleSaveClick = (e) => {
+  const handleSaveClick = async (e) => {
     e.preventDefault();
-    updateUserData(); // Only update data when Save is clicked
+
+    
+    if (file) {
+      try {
+        const base64Image = await convertToBase64(file);
+        tempProfileData.profilePic = base64Image; // Store Base64 string
+        saveProfileData();
+      } catch (error) {
+        alert("Error converting image to Base64:", error);
+      }
+    } else {
+      
+      saveProfileData();
+    }
+  };
+
+ 
+  const saveProfileData = async () => {
+    const profileRef = ref(database, `profileDetails/${formattedEmail}`);
+    try {
+      await set(profileRef, tempProfileData);
+      setProfileData({ ...tempProfileData });
+      setIsEditing(false);
+    } catch (error) {
+      alert("Error saving profile data:", error);
+    }
   };
 
   const calculateCompletion = () => {
     const totalFields = Object.keys(profileData).length;
     const filledFields = Object.values(profileData).filter((value) => value).length;
-    return Math.round((filledFields / totalFields) * 100);
+    return Math.round((filledFields / 6) * 100);
   };
-
+  
   const completionPercentage = calculateCompletion();
 
   return (
@@ -108,7 +129,6 @@ const Profile = () => {
         </svg>
         <div className="percentage-text">{completionPercentage}%</div>
       </div>
-
       <div className="profile-content">
         <div className="profile-pic-container">
           {profileData.profilePic ? (
@@ -119,7 +139,7 @@ const Profile = () => {
         </div>
         <div className="profile-details">
           <h1>{profileData.name || "Name: Not Provided"}</h1>
-          <p>Email: {profileData.email || "Not Provided"}</p>
+          <p>Email: {emaill}</p>
           <p>Phone: {profileData.phone || "Not Provided"}</p>
           <p>
             GitHub:{" "}
@@ -158,12 +178,12 @@ const Profile = () => {
             />
           </label>
           <label>
-            Profile Picture URL:
+            Profile Picture:
             <input
-              type="url"
+              type="file"
               name="profilePic"
-              value={tempProfileData.profilePic}
-              onChange={handleChange}
+              accept="image/jpeg,image/png"
+              onChange={handleFileChange}
             />
           </label>
           <label>
